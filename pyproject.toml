@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robotcar_scraper"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Saravanabalagi Ramachandran <saravanabalagi@hotmail.com>"]
 
@@ -9,6 +9,12 @@ python = ">=3.8,<3.10"
 lxml = "^4.6.3"
 requests = "^2.26.0"
 tqdm = "^4.62.1"
+
+# for notebook debayer and undistort
+opencv-python = "^4.5.3"
+jupyter = "^1.0.0"
+imshowtools = "^0.6.5"
+scipy = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
 
