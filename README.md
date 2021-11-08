@@ -2,7 +2,7 @@
 
 Perform sequenced downloads of various sensors logs for the Oxford Robotcar Dataset <https://robotcar-dataset.robots.ox.ac.uk/>.
 
-The code is tested for Python3 on Ubuntu 16.04.
+Forked from https://github.com/mttgdd/RobotCarDataset-Scraper. This fork uses poetry dependency manager and adds scripts for debayering and undistoring raw images automatically after the files are downloaded. Code is tested on Ubuntu 22.04.
 
 ## Setup
 
@@ -15,6 +15,8 @@ poetry install
 ## Download
 
 `get_datasets.py` script parses the html for the complete dataset listing, scrapes each dataset page. retrieves the available files (tar) for download and saves all the information to `datasets.csv` file. Then use `scrape_mrgdatashare.py` to download the full dataset as shown below:
+
+![note](https://img.shields.io/badge/-note%20-blue) This script only downloads and extracts the images. For debayering and undistoring, please see section below.
 
 ```sh
 # download datasets.csv
@@ -45,3 +47,20 @@ python scrape_mrgdatashare.py \
     --password PASSWORD
 ```
 
+## Download, Debayer and Undistort
+
+Download [Robotcar Camera Models](http://mrgdatashare.robots.ox.ac.uk/download/?filename=camera-models.tar) and place all the `.bin` and `.txt` files inside [camera_models](camera_models) folder.
+
+Then simply add `debayer_undistort` option, and all images will be debayered, undistorted and saved as JPG files automatically after downloading `.tar` files. Note that this uses multiprocessing to do image processing in parallel, so adjust the number of parallel processes to spawn using `--nb_processes` option.
+
+```sh
+python scrape_mrgdatashare.py \
+    --downloads_dir downloads \
+    --datasets_file datasets.csv \
+    --username USERNAME \
+    --password PASSWORD \
+    --debayer_undistort \
+    --nb_processes 12
+```
+
+For interactive playground for debayering and undistoring, please refer to [debayer.ipynb](debayer.ipynb)

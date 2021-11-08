@@ -17,6 +17,11 @@ import tarfile
 import time
 from tqdm import tqdm
 import math
+from multiprocessing import Pool
+from camera_model import CameraModel
+import cv2
+import glob
+import re
 
 # urls
 login_url = "https://mrgdatashare.robots.ox.ac.uk/"
@@ -499,6 +504,7 @@ class DatasetHandler:
 
         # dataset to download
         self.dataset = dataset
+        self.dataset_dir = os.path.join(self.downloads_dir, self.dataset)
 
     @staticmethod
     def get_downloads_dir(parse_args):
@@ -576,6 +582,71 @@ class Zipper:
 
         # tidy up
         print("tidying up dataset: " + self.dataset_handler.dataset)
+
+
+class ImageProcessor:
+    """Performs image processing operations like debayering and undistorting.
+
+            Attributes:
+                dataset_handler (DatasetHandler): Local file paths for this dataset to be downloaded.
+                mp_processes (int): Number of parallel processes to spawn for image processing.
+    """
+
+    def __init__(self, dataset_handler, mp_processes:int=12, delete_src:bool=True) -> None:
+        """Initiates the Image Processor to perform image procession operations.
+
+        Args:
+            img_dir (str): Path to directory containing images.
+            delete_src (bool): Whether or not to delete the original raw undistorted bayer image.
+        """
+        self.dataset_handler = dataset_handler
+        self.mp_processes = mp_processes
+        self.delete_src = delete_src
+
+    def debayer_undistort(self):
+        """Finds all img directories and sends them for debayering and undistortion.
+        """
+        img_dirs = ['stereo/left', 'stereo/right', 'stereo/centre', 'mono_left', 'mono_right', 'mono_rear']
+        for d in img_dirs:
+            img_dir = os.path.join(self.dataset_handler.dataset_dir, d)
+            if os.path.exists(img_dir):
+                self.debayer_undistort_img_dir(img_dir)
+
+    def debayer_undistort_img_dir(self, img_dir:str):
+        """Builds a camera model for the img dir and performs debayering and undistortion in parallel on images.
+
+        Args:
+            img_dir (str): Path to directory containing images.
+
+        """
+        img_paths = glob.glob(f'{img_dir}/*.png')
+        self.cm = CameraModel('camera_models', img_dir)
+        with Pool(processes=self.mp_processes) as p:
+            list(tqdm(p.imap(self.debayer_undistort_img, img_paths), total=len(img_paths), desc="Debayering and Undistoring Images"))
+        del self.cm
+
+    def debayer_undistort_img(self, img_path: str):
+        """Debayer an image using cv2, undistort image using provided camera model, and save as JPG.
+
+        Args:
+            img_path (str): Path to the image.
+        """
+        try:
+            # read, debayer and undistort
+            img_bayer = cv2.imread(img_path)
+            img_distorted = cv2.cvtColor(img_bayer[:, :, 0], cv2.COLOR_BAYER_GB2RGB)
+            img = self.cm.undistort(img_distorted)
+
+            # save jpg
+            jpg_filename = f'{os.path.splitext(img_path)[0]}.jpg'
+            cv2.imwrite(jpg_filename, img)
+
+            # delete if specified
+            if self.delete_src:
+                os.remove(img_path)
+
+        except Exception as e:
+            print(f'Error processing {img_path}')
 
 
 class URLHandler:
@@ -674,6 +745,17 @@ if __name__ == "__main__":
         dest="downloads_dir",
         default=downloads_dir_example,
         help="Root download directory e.g. " + downloads_dir_example)
+    argument_parser.add_argument(
+        "--debayer_undistort",
+        default=False,
+        action='store_true',
+        help="Debayer and undistort images after download")
+    argument_parser.add_argument(
+        "--nb_processes",
+        type=int,
+        default=12,
+        help="Number of parallel processes to spawn for image processing (applies only when --debayer_undistort is enabled)"
+    )
     argument_parser.add_argument(
         "--period_duration",
         dest="period_duration",
@@ -775,6 +857,11 @@ if __name__ == "__main__":
             # unzip
             if file_was_found:
                 zipper.unzip(url_handler)
+
+                # debayer and undistort images
+                if args.debayer_undistort:
+                    img_p = ImageProcessor(dataset_handler, mp_processes=args.nb_processes, delete_src=True)
+                    img_p.debayer_undistort()
 
         # tidy up
         zipper.tidy_up()
