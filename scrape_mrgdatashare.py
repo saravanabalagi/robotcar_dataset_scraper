@@ -18,6 +18,7 @@ import tarfile
 import time
 from tqdm import tqdm
 import math
+from dotenv import load_dotenv
 from multiprocessing import Pool
 from camera_model import CameraModel
 import cv2
@@ -34,7 +35,6 @@ failed_login = "Please try again or email for support"
 
 # filesystem
 file_extension = ".tar"
-downloads_dir_example = os.path.expanduser("~/Downloads")
 
 # throttle params (seconds) - to avoid overloading the server with requests and to avoid getting blocked by the server for too many requests in a short time period
 default_period_duration = 10 * 60
@@ -91,6 +91,8 @@ class Datasets:
 
         # check datasets file
         if not parse_args.datasets_file:
+            if (datasets_file := os.environ.get('OXRO_DATASETS_FILE')) is not None:
+                return datasets_file
             raise IOError("Please specify option datasets_file.")
         return os.path.abspath(
             parse_args.datasets_file)
@@ -178,6 +180,8 @@ class Scraper:
         """
 
         if not parse_args.username:
+            if (username := os.environ.get('OXRO_USERNAME')) is not None:
+                return username
             raise IOError("Please specify option username.")
         return parse_args.username
 
@@ -197,6 +201,8 @@ class Scraper:
         """
 
         if not parse_args.password:
+            if (password := os.environ.get('OXRO_PASSWORD')) is not None:
+                return password
             raise IOError("Please specify option password.")
         return parse_args.password
 
@@ -522,6 +528,8 @@ class DatasetHandler:
         """
 
         if not parse_args.downloads_dir:
+            if (downloads_dir := os.environ.get('OXRO_DOWNLOADS_DIR')) is not None:
+                return downloads_dir
             raise IOError("Please specify option downloads_dir.")
         return os.path.abspath(parse_args.downloads_dir)
 
@@ -722,6 +730,10 @@ if __name__ == "__main__":
     # console
     print("ScrapeMRGDatashare is starting...")
 
+    # load environment variables
+    print("Loading environment variables...")
+    load_dotenv()
+
     # option parsing suite
     argument_parser = argparse.ArgumentParser(
         description="ScrapeMRGDatashare input parameters")
@@ -743,8 +755,7 @@ if __name__ == "__main__":
     argument_parser.add_argument(
         "--downloads_dir",
         dest="downloads_dir",
-        default=downloads_dir_example,
-        help="Root download directory e.g. " + downloads_dir_example)
+        help="Root download directory")
     argument_parser.add_argument(
         "--debayer_undistort",
         default=False,

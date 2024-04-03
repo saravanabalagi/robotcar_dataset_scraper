@@ -12,9 +12,10 @@ tqdm = "^4.62.1"
 
 # for notebook debayer and undistort
 opencv-python = "^4.5.3"
-jupyter = "^1.0.0"
 imshowtools = "^0.6.5"
 scipy = "^1.7.1"
+python-dotenv = "^1.0.1"
+jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 

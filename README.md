@@ -6,10 +6,22 @@ Forked from https://github.com/mttgdd/RobotCarDataset-Scraper. This fork uses po
 
 ## Setup
 
+- Clone and install dependencies using poetry.
+
 ```sh
 git clone https://github.com/saravanabalagi/robotcar_dataset_scraper.git
 cd robotcar_dataset_scraper
 poetry install
+```
+
+- Add credentials and downloads path to `.env` file.
+
+```
+cp .env.example .env
+
+# edit .env file
+# update OXRO_USERNAME and OXRO_PASSWORD
+# update DOWNLOADS_DIR to the directory where you want to save the downloaded files
 ```
 
 ## Download
@@ -24,10 +36,7 @@ python get_datasets.py
 
 # modify and download data listed in datasets.csv
 python scrape_mrgdatashare.py \
-    --downloads_dir downloads \
-    --datasets_file datasets.csv \
-    --username USERNAME \
-    --password PASSWORD
+    --datasets_file datasets.csv
 ```
 
 If you do not need the full dataset, you can use `--choice_sensors` and `--choice_runs_file` options to download parts of the dataset on your own needs. 
