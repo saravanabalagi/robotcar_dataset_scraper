@@ -10,6 +10,7 @@ Oxford Robotics Institute, Oxford University.
 # imports
 import argparse
 import datetime
+import threading
 from lxml import html
 import os
 import requests
@@ -21,7 +22,6 @@ from multiprocessing import Pool
 from camera_model import CameraModel
 import cv2
 import glob
-import re
 
 # urls
 login_url = "https://mrgdatashare.robots.ox.ac.uk/"
@@ -860,8 +860,11 @@ if __name__ == "__main__":
 
                 # debayer and undistort images
                 if args.debayer_undistort:
-                    img_p = ImageProcessor(dataset_handler, mp_processes=args.nb_processes, delete_src=True)
-                    img_p.debayer_undistort()
+                    def debayer_undistort():
+                        img_p = ImageProcessor(dataset_handler, mp_processes=args.nb_processes, delete_src=True)
+                        img_p.debayer_undistort()
+                    t = threading.Thread(target=debayer_undistort)
+                    t.start()
 
         # tidy up
         zipper.tidy_up()
