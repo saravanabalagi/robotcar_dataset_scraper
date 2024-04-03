@@ -32,13 +32,15 @@ cp .env.example .env
 
 ```sh
 # download datasets.csv
+# if you want to move datasets.csv
+# make sure to update OXRO_DATASETS_FILE in .env
 python get_datasets.py
 
 # modify and download data listed in datasets.csv
-python scrape_mrgdatashare.py \
-    --datasets_file datasets.csv
+python scrape_mrgdatashare.py
 ```
 
+### Selective Download
 If you do not need the full dataset, you can use `--choice_sensors` and `--choice_runs_file` options to download parts of the dataset on your own needs. 
 
 - `--choice_sensors` option can receive multiple sensor names in `tags, stereo_centre, stereo_left, stereo_right, vo, mono_left, mono_right, mono_rear, lms_front, lms_rear, ldmrs, gps, all. `
@@ -49,14 +51,10 @@ for example you can download "stereo_centre", "vo" and "lms_front" data of  "201
 ```sh
 python scrape_mrgdatashare.py \
     --choice_sensors stereo_centre,vo,lms_front \
-    --choice_runs_file example_list.txt \
-    --downloads_dir downloads \
-    --datasets_file datasets.csv \
-    --username USERNAME \
-    --password PASSWORD
+    --choice_runs_file example_list.txt
 ```
 
-## Download, Debayer and Undistort
+### Debayer and Undistort
 
 Download [Robotcar Camera Models](http://mrgdatashare.robots.ox.ac.uk/download/?filename=camera-models.tar) and place all the `.bin` and `.txt` files inside [camera_models](camera_models) folder.
 
@@ -64,10 +62,6 @@ Then simply add `debayer_undistort` option, and all images will be debayered, un
 
 ```sh
 python scrape_mrgdatashare.py \
-    --downloads_dir downloads \
-    --datasets_file datasets.csv \
-    --username USERNAME \
-    --password PASSWORD \
     --debayer_undistort \
     --nb_processes 12
 ```
